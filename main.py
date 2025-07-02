@@ -27,7 +27,8 @@ def main():
     btn_vypravy = pygame.Rect(width//2 + 50, height//2 - 100, 250, 100)
 
     # Path points for vypravy
-    num_paths = random.randint(3, 5)
+    num_paths = random.randint(3, 5)  
+    end_point = (width - 300, height // 2)
     start_points, end_point, paths = generate_paths_no_overlap(
         num_paths=num_paths,
         screen_width=width,
@@ -37,10 +38,11 @@ def main():
         x_end_offset=200,
         min_dist=60,
         min_path_dist=120,
-        min_count=12,
-        max_count=20,
+        min_count=6,      # zde změna
+        max_count=8,      # zde změna
         box_size=40,
-        max_offset=40
+        max_offset=40,
+        end_point=end_point   # <-- zde předáš pevný bod
     )
     tile_types_list = [generate_tile_types(len(path)) for path in paths]
 
@@ -70,6 +72,7 @@ def main():
             for path_points, tile_types in zip(paths, tile_types_list):
                 # Pro každou cestu:
                 draw_path(screen, path_points, tile_types, box_size=40, start_point=path_points[0], end_point=end_point)
+
 
         pygame.display.flip()
         pygame.time.Clock().tick(60)

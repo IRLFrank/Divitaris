@@ -136,7 +136,7 @@ def generate_start_points(num_points, screen_height, y_barrier=100, x=300, min_d
     return points
 
 def generate_end_point(screen_width, screen_height, y_barrier=100):
-    x = screen_width - 200
+    x = screen_width - 300
     y = random.randint(y_barrier, screen_height - y_barrier)
     return (x, y)
 
@@ -195,19 +195,23 @@ def generate_paths_no_overlap(
     min_count=8,
     max_count=10,
     box_size=40,
-    max_offset=40
+    max_offset=40,
+    end_point=None   # <-- přidat parametr
 ):
     # 1. Vygeneruj start pointy
     start_points = []
     attempts = 0
     while len(start_points) < num_paths and attempts < 1000:
-        y = random.randint(y_barrier, screen_height - y_barrier)
+        y = random.randint(y_barrier, screen_height - y_barrier - box_size)
         if all(abs(y - py) >= min_path_dist for _, py in start_points):
-            start_points.append((x_start, y))
+            # Omez x_start, aby nebyl mimo obraz
+            x = max(0, min(x_start, screen_width - box_size))
+            start_points.append((x, y))
         attempts += 1
 
-    # 2. Vygeneruj end point
-    end_point = (screen_width - x_end_offset, random.randint(y_barrier, screen_height - y_barrier))
+    # 2. Vygeneruj end point pouze pokud není zadaný
+    if end_point is None:
+        end_point = (screen_width - x_end_offset, random.randint(y_barrier, screen_height - y_barrier))
 
     # 3. Generuj cesty a kontroluj překrývání
     all_points = []
@@ -222,9 +226,8 @@ def generate_paths_no_overlap(
             # Přidej náhodnou odchylku pro klikatost, kromě startu a cíle
             if 0 < i < num_tiles - 1:
                 y += random.randint(-max_offset, max_offset)
-            # Kontrola překrývání
             found = False
-            for _ in range(100):
+            for _ in range(200):  # více pokusů
                 too_close = False
                 for px, py in all_points:
                     if math.hypot(x - px, y - py) < min_dist:
@@ -237,10 +240,9 @@ def generate_paths_no_overlap(
                 y = int(start[1] + t * (end_point[1] - start[1]))
                 if 0 < i < num_tiles - 1:
                     y += random.randint(-max_offset, max_offset)
-            if not found:
-                # Pokud se nepodaří najít vhodné místo, použij poslední známou pozici
-                pass
-            path.append((x, y))
-            all_points.append((x, y))
+            if found:
+                path.append((x, y))
+                all_points.append((x, y))
+            # Pokud se nepodaří najít vhodné místo, kostičku nepřidávej!
         paths.append(path)
     return start_points, end_point, paths
