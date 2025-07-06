@@ -68,7 +68,7 @@ def generate_multiple_paths(
     y_offset=100,
     x_offset_range=(-30, 30),
     min_dist=150,
-    min_path_dist=120,  # minimální vzdálenost mezi začátky cest
+    min_path_dist=100,  # minimální vzdálenost mezi začátky cest
     screen_height=1080,
     y_barrier=100
 ):
@@ -161,11 +161,16 @@ def draw_path(screen, path_points, tile_types=None, box_size=40, start_point=Non
     }
     if tile_types is None:
         tile_types = [0] * len(path_points)
+    font = pygame.font.SysFont(None, int(box_size * 0.7))  # velikost fontu podle box_size
     for i, (x, y) in enumerate(path_points):
         t = tile_types[i]
         color = colors.get(t, (200, 200, 50))
         rect = pygame.Rect(x, y, box_size, box_size)
         pygame.draw.rect(screen, color, rect)
+        # Vykresli číslo kostičky doprostřed
+        text = font.render(str(i + 1), True, (30, 30, 30))
+        text_rect = text.get_rect(center=(x + box_size // 2, y + box_size // 2))
+        screen.blit(text, text_rect)
 
     # Zvýraznění start pointu (první bod cesty)
     if start_point:
@@ -196,7 +201,7 @@ def generate_paths_no_overlap(
     max_count=10,
     box_size=40,
     max_offset=40,
-    end_point=None   # <-- přidat parametr
+    end_point=None
 ):
     # 1. Vygeneruj start pointy
     start_points = []
@@ -204,7 +209,6 @@ def generate_paths_no_overlap(
     while len(start_points) < num_paths and attempts < 1000:
         y = random.randint(y_barrier, screen_height - y_barrier - box_size)
         if all(abs(y - py) >= min_path_dist for _, py in start_points):
-            # Omez x_start, aby nebyl mimo obraz
             x = max(0, min(x_start, screen_width - box_size))
             start_points.append((x, y))
         attempts += 1
@@ -213,21 +217,28 @@ def generate_paths_no_overlap(
     if end_point is None:
         end_point = (screen_width - x_end_offset, random.randint(y_barrier, screen_height - y_barrier))
 
-    # 3. Generuj cesty a kontroluj překrývání
+    # 3. Vygeneruj X souřadnice pro všechny pozice v cestě
+    max_tiles = random.randint(min_count, max_count)
+    x_positions = []
+    for i in range(max_tiles):
+        t = i / (max_tiles - 1)
+        x = int(start_points[0][0] + t * (end_point[0] - start_points[0][0]))
+        x_positions.append(x)
+
+    # 4. Generuj cesty a kontroluj překrývání
     all_points = []
     paths = []
     for start in start_points:
-        num_tiles = random.randint(min_count, max_count)
+        num_tiles = max_tiles  # všechny cesty budou mít stejný počet kostiček (můžeš upravit na různé délky)
         path = []
         for i in range(num_tiles):
+            x = x_positions[i] + random.randint(-10, 10)  # malá odchylka
             t = i / (num_tiles - 1)
-            x = int(start[0] + t * (end_point[0] - start[0]))
             y = int(start[1] + t * (end_point[1] - start[1]))
-            # Přidej náhodnou odchylku pro klikatost, kromě startu a cíle
             if 0 < i < num_tiles - 1:
                 y += random.randint(-max_offset, max_offset)
             found = False
-            for _ in range(200):  # více pokusů
+            for _ in range(200):
                 too_close = False
                 for px, py in all_points:
                     if math.hypot(x - px, y - py) < min_dist:
@@ -236,13 +247,11 @@ def generate_paths_no_overlap(
                 if not too_close:
                     found = True
                     break
-                # Pokud je moc blízko, zkus jinou odchylku
                 y = int(start[1] + t * (end_point[1] - start[1]))
                 if 0 < i < num_tiles - 1:
                     y += random.randint(-max_offset, max_offset)
             if found:
                 path.append((x, y))
                 all_points.append((x, y))
-            # Pokud se nepodaří najít vhodné místo, kostičku nepřidávej!
         paths.append(path)
     return start_points, end_point, paths

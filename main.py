@@ -40,7 +40,7 @@ def main():
         min_path_dist=120,
         min_count=6,      # zde změna
         max_count=8,      # zde změna
-        box_size=40,
+        box_size=48,
         max_offset=40,
         end_point=end_point   # <-- zde předáš pevný bod
     )
