@@ -1,6 +1,7 @@
 import pygame
 import random
 import math
+import os
 
 def generate_tile_types(num_tiles):
     """
@@ -152,41 +153,8 @@ def generate_path_between(start, end, num_tiles=15, max_offset=40):
         points.append((x, y))
     return points
 
-def draw_path(screen, path_points, tile_types=None, box_size=40, start_point=None, end_point=None):
-    colors = {
-        0: (200, 200, 50),
-        1: (80, 180, 250),
-        2: (220, 80, 80),
-        3: (180, 80, 220)
-    }
-    if tile_types is None:
-        tile_types = [0] * len(path_points)
-    font = pygame.font.SysFont(None, int(box_size * 0.7))  # velikost fontu podle box_size
-    for i, (x, y) in enumerate(path_points):
-        t = tile_types[i]
-        color = colors.get(t, (200, 200, 50))
-        rect = pygame.Rect(x, y, box_size, box_size)
-        pygame.draw.rect(screen, color, rect)
-        # Vykresli číslo kostičky doprostřed
-        text = font.render(str(i + 1), True, (30, 30, 30))
-        text_rect = text.get_rect(center=(x + box_size // 2, y + box_size // 2))
-        screen.blit(text, text_rect)
-
-    # Zvýraznění start pointu (první bod cesty)
-    if start_point:
-        sx, sy = start_point
-        pygame.draw.ellipse(
-            screen, (0, 255, 0),
-            (sx - box_size//4, sy - box_size//4, box_size + box_size//2, box_size + box_size//2), 4
-        )
-
-    # Zvýraznění end pointu (poslední bod cesty)
-    if end_point:
-        ex, ey = end_point
-        pygame.draw.ellipse(
-            screen, (255, 0, 0),
-            (ex - box_size//4, ey - box_size//4, box_size + box_size//2, box_size + box_size//2), 4
-        )
+# Odstraň globální načtení:
+# MAPA_BOJ_IMG = pygame.image.load(MAPA_BOJ_PATH).convert_alpha()
 
 def generate_paths_no_overlap(
     num_paths=3,
@@ -199,7 +167,7 @@ def generate_paths_no_overlap(
     min_path_dist=120,
     min_count=8,
     max_count=10,
-    box_size=40,
+    box_size=48,
     max_offset=40,
     end_point=None
 ):
@@ -255,3 +223,43 @@ def generate_paths_no_overlap(
                 all_points.append((x, y))
         paths.append(path)
     return start_points, end_point, paths
+
+def draw_path(screen, path_points, tile_types=None, box_size=40, start_point=None, end_point=None, mapa_boj_img=None):
+    colors = {
+        0: (200, 200, 50),
+        1: (80, 180, 250),
+        2: (220, 80, 80),
+        3: (180, 80, 220)
+    }
+    if tile_types is None:
+        tile_types = [0] * len(path_points)
+    font = pygame.font.SysFont(None, int(box_size * 0.7))
+    for i, (x, y) in enumerate(path_points):
+        t = tile_types[i]
+        if t == 0 and mapa_boj_img is not None:
+            img = pygame.transform.smoothscale(mapa_boj_img, (box_size, box_size))
+            screen.blit(img, (x, y))
+        else:
+            color = colors.get(t, (200, 200, 50))
+            rect = pygame.Rect(x, y, box_size, box_size)
+            pygame.draw.rect(screen, color, rect)
+        # Vykresli číslo kostičky doprostřed
+        text = font.render(str(i + 1), True, (30, 30, 30))
+        text_rect = text.get_rect(center=(x + box_size // 2, y + box_size // 2))
+        screen.blit(text, text_rect)
+
+    # Zvýraznění start pointu (první bod cesty)
+    if start_point:
+        sx, sy = start_point
+        pygame.draw.ellipse(
+            screen, (0, 255, 0),
+            (sx - box_size//4, sy - box_size//4, box_size + box_size//2, box_size + box_size//2), 4
+        )
+
+    # Zvýraznění end pointu (poslední bod cesty)
+    if end_point:
+        ex, ey = end_point
+        pygame.draw.ellipse(
+            screen, (255, 0, 0),
+            (ex - box_size//4, ey - box_size//4, box_size + box_size//2, box_size + box_size//2), 4
+        )

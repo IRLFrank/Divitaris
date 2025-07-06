@@ -1,5 +1,6 @@
 import pygame
 import random
+import os
 from Animace.animace_setup import setup_animations
 from Vypravy.mapa.mapa_vypravy import (
     generate_start_points, generate_end_point, generate_path_between,
@@ -29,6 +30,7 @@ def main():
     # Path points for vypravy
     num_paths = random.randint(3, 5)  
     end_point = (width - 300, height // 2)
+    box_size = 54  
     start_points, end_point, paths = generate_paths_no_overlap(
         num_paths=num_paths,
         screen_width=width,
@@ -40,11 +42,15 @@ def main():
         min_path_dist=120,
         min_count=6,      # zde změna
         max_count=8,      # zde změna
-        box_size=48,
+        box_size=box_size,
         max_offset=40,
         end_point=end_point   # <-- zde předáš pevný bod
     )
     tile_types_list = [generate_tile_types(len(path)) for path in paths]
+
+    # Načtení obrázku pro bojovou mapu
+    MAPA_BOJ_PATH = os.path.join("Textury", "Mapa", "mapa_boj.png")
+    MAPA_BOJ_IMG = pygame.image.load(MAPA_BOJ_PATH).convert_alpha()
 
     state = "menu"  # "menu" or "vypravy"
     running = True
@@ -71,7 +77,7 @@ def main():
             screen.fill((40, 70, 40))  # nové pozadí pro výpravy
             for path_points, tile_types in zip(paths, tile_types_list):
                 # Pro každou cestu:
-                draw_path(screen, path_points, tile_types, box_size=40, start_point=path_points[0], end_point=end_point)
+                draw_path(screen, path_points, tile_types, box_size=box_size, start_point=path_points[0], end_point=end_point, mapa_boj_img=MAPA_BOJ_IMG)
 
 
         pygame.display.flip()
