@@ -11,14 +11,13 @@ def generate_tile_types(num_tiles):
     types = []
     for _ in range(num_tiles):
         r = random.random()
-        if r < 0.5:
+        if r < 0.4:
             types.append(0)
         elif r < 0.8:
             types.append(1)
         elif r < 0.9:
             types.append(2)
-        else:
-            types.append(3)
+        
     return types
 
 def generate_path_points(
@@ -201,14 +200,14 @@ def generate_paths_no_overlap(
         path = []
         for i in range(num_tiles):
             x = x_positions[i] + random.randint(-10, 10)  # malá odchylka
-            t = i / (num_tiles - 1)
-            y = int(start[1] + t * (end_point[1] - start[1]))
-            if 0 < i < num_tiles - 1:
-                y += random.randint(-max_offset, max_offset)
+            t = i / (num_tiles - 1) # normalizace t pro interpolaci
+            y = int(start[1] + t * (end_point[1] - start[1]))    
+            if 0 < i < num_tiles - 1: # pokud nejde o start nebo cíl, přidej náhodnou odchylku
+                y += random.randint(-max_offset, max_offset) 
             found = False
-            for _ in range(200):
-                too_close = False
-                for px, py in all_points:
+            for _ in range(200): # max 200 pokusů o nalezení vhodného bodu
+                too_close = False 
+                for px, py in all_points: 
                     if math.hypot(x - px, y - py) < min_dist:
                         too_close = True
                         break
@@ -224,20 +223,31 @@ def generate_paths_no_overlap(
         paths.append(path)
     return start_points, end_point, paths
 
-def draw_path(screen, path_points, tile_types=None, box_size=40, start_point=None, end_point=None, mapa_boj_img=None):
+def draw_path(
+    screen, path_points, tile_types=None, box_size=40,
+    start_point=None, end_point=None,
+    mapa_boj_img=None, mapa_elite_img=None, mapa_boss_img=None
+):
     colors = {
         0: (200, 200, 50),
         1: (80, 180, 250),
         2: (220, 80, 80),
-        3: (180, 80, 220)
+        3: (180, 80, 220),
+        4: (255, 100, 0)  # barva pro boss, fallback
     }
     if tile_types is None:
         tile_types = [0] * len(path_points)
     font = pygame.font.SysFont(None, int(box_size * 0.7))
     for i, (x, y) in enumerate(path_points):
-        t = tile_types[i]
+        t = tile_types[i] if i < len(tile_types) else 0
         if t == 0 and mapa_boj_img is not None:
             img = pygame.transform.smoothscale(mapa_boj_img, (box_size, box_size))
+            screen.blit(img, (x, y))
+        elif t == 2 and mapa_elite_img is not None:
+            img = pygame.transform.smoothscale(mapa_elite_img, (box_size, box_size))
+            screen.blit(img, (x, y))
+        elif t == 4 and mapa_boss_img is not None:
+            img = pygame.transform.smoothscale(mapa_boss_img, (box_size, box_size))
             screen.blit(img, (x, y))
         else:
             color = colors.get(t, (200, 200, 50))

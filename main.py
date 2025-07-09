@@ -51,6 +51,10 @@ def main():
     # Načtení obrázku pro bojovou mapu
     MAPA_BOJ_PATH = os.path.join("Textury", "Mapa", "mapa_boj.png")
     MAPA_BOJ_IMG = pygame.image.load(MAPA_BOJ_PATH).convert_alpha()
+    MAPA_ELITE_PATH = os.path.join("Textury", "Mapa", "mapa_elite.png")
+    MAPA_ELITE_IMG = pygame.image.load(MAPA_ELITE_PATH).convert_alpha()
+    MAPA_BOSS_PATH = os.path.join("Textury", "Mapa", "mapa_boss.png")
+    MAPA_BOSS_IMG = pygame.image.load(MAPA_BOSS_PATH).convert_alpha()
 
     state = "menu"  # "menu" or "vypravy"
     running = True
@@ -75,10 +79,51 @@ def main():
             screen.blit(font.render("Výpravy", True, (30, 30, 30)), (btn_vypravy.x + 30, btn_vypravy.y + 25))
         elif state == "vypravy":
             screen.fill((40, 70, 40))  # nové pozadí pro výpravy
+            
+              # Zruš všechny staré bossy (typ 4)
+            for tile_types in tile_types_list:
+                for i in range(len(tile_types)):
+                    if tile_types[i] == 4:
+                        tile_types[i] = 0
+
+            # Najdi kostičku nejblíže end_point a nastav jí typ 4 (boss)
+            min_dist = float('inf')
+            boss_path_idx = -1
+            boss_tile_idx = -1
+
+            for path_idx, path in enumerate(paths):
+                for tile_idx, (x, y) in enumerate(path):
+                    dist = ((x - end_point[0]) ** 2 + (y - end_point[1]) ** 2) ** 0.5
+                    if dist < min_dist:
+                        min_dist = dist
+                        boss_path_idx = path_idx
+                        boss_tile_idx = tile_idx
+
+            # Bezpečně nastav boss typ jen pokud index existuje
+            if (
+                boss_path_idx != -1 and
+                boss_tile_idx != -1 and
+                boss_path_idx < len(tile_types_list) and
+                boss_tile_idx < len(tile_types_list[boss_path_idx])
+            ):
+                tile_types_list[boss_path_idx][boss_tile_idx] = 4
+                        
+            
+            # Vykreslení cesty   
+            
             for path_points, tile_types in zip(paths, tile_types_list):
                 # Pro každou cestu:
-                draw_path(screen, path_points, tile_types, box_size=box_size, start_point=path_points[0], end_point=end_point, mapa_boj_img=MAPA_BOJ_IMG)
+                draw_path(
+                    screen, path_points, tile_types,
+                    box_size=box_size,
+                    start_point=path_points[0],
+                    end_point=end_point,
+                    mapa_boj_img=MAPA_BOJ_IMG,
+                    mapa_elite_img=MAPA_ELITE_IMG,
+                    mapa_boss_img=MAPA_BOSS_IMG
+                )
 
+          
 
         pygame.display.flip()
         pygame.time.Clock().tick(60)
