@@ -84,45 +84,29 @@ def main():
         elif state == "vypravy":
             screen.fill((40, 70, 40))  # Barva pozadí pro výpravy
 
-            # Zruš všechny staré bossy (typ 4)
+            # Reset all boss tiles first
             for tile_types in tile_types_list:
                 for i in range(len(tile_types)):
                     if tile_types[i] == 4:
                         tile_types[i] = 0
 
-            # Najdi cestu a index kostičky nejblíže end_point
-            min_dist = float('inf')
+            # Find the longest path
+            max_length = 0
             boss_path_idx = -1
-            boss_tile_idx = -1
+            
+            # Check each path's length
+            for idx, path in enumerate(paths):
+                path_length = len(path)  # Délka aktuální cesty
+                if path_length > max_length:
+                    max_length = path_length
+                    boss_path_idx = idx
 
-            for path_idx, path in enumerate(paths):
-                for tile_idx, (x, y) in enumerate(path):
-                    dist = ((x - end_point[0]) ** 2 + (y - end_point[1]) ** 2) ** 0.5
-                    if dist < min_dist:
-                        min_dist = dist
-                        boss_path_idx = path_idx
-                        boss_tile_idx = tile_idx
-
-            # Bezpečně nastav boss typ jen pokud index existuje
-            if (
-                boss_path_idx != -1 and
-                boss_tile_idx != -1 and
-                boss_path_idx < len(tile_types_list) and
-                boss_tile_idx < len(tile_types_list[boss_path_idx])
-            ):
-                # Nastav typ 4 (boss) pouze této kostičce
-                tile_types_list[boss_path_idx][boss_tile_idx] = 4
-            else:
-                print("Boss kostička nebyla nalezena nebo index mimo rozsah!")
-
-            # Najdi všechny cesty s maximální délkou
-            max_len = max(len(path) for path in paths)
-            max_paths = [i for i, path in enumerate(paths) if len(path) == max_len]
-
-            # Nastav boss na poslední kostičku v POSLEDNÍ cestě s max délkou
-            if max_paths:
-                last_idx = max_paths[-1]
-                tile_types_list[last_idx][-1] = 4
+            # Set boss on the last tile
+            if boss_path_idx >= 0:
+                path = paths[boss_path_idx]  # Vezmi nejdelší cestu
+                last_tile_idx = len(path) - 1  # Index poslední kostičky (o 1 menší než délka)
+                tile_types_list[boss_path_idx][last_tile_idx] = 4  # Nastav boss
+                print(f"Boss set on path {boss_path_idx}, tile {last_tile_idx + 1} of {len(path)}")
 
             # Vykreslení všech cest
             for path_points, tile_types in zip(paths, tile_types_list):
