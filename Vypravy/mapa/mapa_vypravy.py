@@ -6,19 +6,21 @@ import os
 def generate_tile_types(num_tiles):
     """
     Vygeneruje typy kostiček podle pravděpodobností.
-    0 = základní (50%), 1 = speciální (30%), 2 = vzácná (10%), 3 = zbytek (10%)
+    0 = základní (60%), 1 = speciální (20%), 2 = vzácná (10%), 3 = zbytek (10%)
     """
-    types = []
-    for _ in range(num_tiles):
+    types = [0] * num_tiles  # Inicializuj list správné délky s výchozím typem 0
+    for i in range(num_tiles):
         r = random.random()
         if r < 0.4:
-            types.append(0)
+            types[i] = 0
         elif r < 0.8:
-            types.append(1)
+            types[i] = 1
         elif r < 0.9:
-            types.append(2)
-        
+            types[i] = 2
+        else:
+            types[i] = 3
     return types
+   
 
 def generate_path_points(
     start_x=240, start_y=600, box_size=50, count=18, step_x=90, step_y_range=(-30, 30), min_dist=50,
