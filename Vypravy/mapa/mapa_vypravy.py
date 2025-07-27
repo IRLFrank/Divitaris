@@ -228,30 +228,47 @@ def generate_paths_no_overlap(
 def draw_path(
     screen, path_points, tile_types=None, box_size=40,
     start_point=None, end_point=None,
-    mapa_boj_img=None, mapa_elite_img=None, mapa_boss_img=None
+    mapa_boj_img=None, mapa_shop_img=None, mapa_event_img=None, mapa_elite_img=None, mapa_boss_img=None
 ):
-    colors = {
+    """
+    Vykreslí cestu s různými texturami pro různé typy kostiček:
+    0 = boj (mapa_boj.png)
+    1 = elite (mapa_elite.png)
+    2 = shop (mapa_shop.png)
+    3 = event (mapa_event.png)
+    4 = boss (mapa_boss.png)
+    """
+    colors = {  # fallback barvy, pokud nejsou textury
         0: (200, 200, 50),
-        1: (80, 180, 250),
-        2: (220, 80, 80),
+        1: (220, 80, 80),
+        2: (80, 180, 250),
         3: (180, 80, 220),
-        4: (255, 100, 0)  # barva pro boss, fallback
+        4: (255, 100, 0)
     }
     if tile_types is None:
         tile_types = [0] * len(path_points)
     font = pygame.font.SysFont(None, int(box_size * 0.7))
+    
     for i, (x, y) in enumerate(path_points):
         t = tile_types[i] if i < len(tile_types) else 0
+        # Vykresli příslušnou texturu podle typu kostičky
         if t == 0 and mapa_boj_img is not None:
             img = pygame.transform.smoothscale(mapa_boj_img, (box_size, box_size))
             screen.blit(img, (x, y))
-        elif t == 2 and mapa_elite_img is not None:
+        elif t == 1 and mapa_elite_img is not None:
             img = pygame.transform.smoothscale(mapa_elite_img, (box_size, box_size))
+            screen.blit(img, (x, y))
+        elif t == 2 and mapa_shop_img is not None:
+            img = pygame.transform.smoothscale(mapa_shop_img, (box_size, box_size))
+            screen.blit(img, (x, y))
+        elif t == 3 and mapa_event_img is not None:
+            img = pygame.transform.smoothscale(mapa_event_img, (box_size, box_size))
             screen.blit(img, (x, y))
         elif t == 4 and mapa_boss_img is not None:
             img = pygame.transform.smoothscale(mapa_boss_img, (box_size, box_size))
             screen.blit(img, (x, y))
         else:
+            # Fallback na barevný obdélník
             color = colors.get(t, (200, 200, 50))
             rect = pygame.Rect(x, y, box_size, box_size)
             pygame.draw.rect(screen, color, rect)

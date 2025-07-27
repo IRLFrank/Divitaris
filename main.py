@@ -31,7 +31,7 @@ def main():
     # Generování cest pro výpravy
     num_paths = random.randint(3, 5)  # Počet cest (náhodně 3-5)
     end_point = (width - 300, height // 2)  # Koncový bod cest
-    box_size = 54  # Velikost kostičky
+    box_size = 64  # Velikost kostičky
     start_points, end_point, paths = generate_paths_no_overlap(
         num_paths=num_paths,
         screen_width=width,
@@ -49,13 +49,18 @@ def main():
     )
     tile_types_list = [generate_tile_types(len(path)) for path in paths]  # Typy kostiček pro každou cestu
 
-    # Načtení obrázků pro různé typy kostiček
-    MAPA_BOJ_PATH = os.path.join("Textury", "Mapa", "mapa_boj.png")
-    MAPA_BOJ_IMG = pygame.image.load(MAPA_BOJ_PATH).convert_alpha()
-    MAPA_ELITE_PATH = os.path.join("Textury", "Mapa", "mapa_elite.png")
-    MAPA_ELITE_IMG = pygame.image.load(MAPA_ELITE_PATH).convert_alpha()
-    MAPA_BOSS_PATH = os.path.join("Textury", "Mapa", "mapa_boss.png")
-    MAPA_BOSS_IMG = pygame.image.load(MAPA_BOSS_PATH).convert_alpha()
+    # Načtení textur pro mapu
+    MAPA_TEMP_PATH = os.path.join("Textury", "Mapa", "mapa_temp.png")
+    MAPA_TEMP_IMG = pygame.image.load(MAPA_TEMP_PATH).convert()
+    # Roztáhni pozadí na celou velikost okna
+    MAPA_TEMP_IMG = pygame.transform.scale(MAPA_TEMP_IMG, (width, height))
+
+    # Načtení textur pro jednotlivé typy kostiček
+    MAPA_BOJ_IMG = pygame.image.load(os.path.join("Textury", "Mapa", "mapa_boj.png")).convert_alpha()
+    MAPA_SHOP_IMG = pygame.image.load(os.path.join("Textury", "Mapa", "mapa_shop.png")).convert_alpha()
+    MAPA_EVENT_IMG = pygame.image.load(os.path.join("Textury", "Mapa", "mapa_event.png")).convert_alpha()
+    MAPA_ELITE_IMG = pygame.image.load(os.path.join("Textury", "Mapa", "mapa_elite.png")).convert_alpha()
+    MAPA_BOSS_IMG = pygame.image.load(os.path.join("Textury", "Mapa", "mapa_boss.png")).convert_alpha()
 
     state = "menu"  # Stav hry ("menu" nebo "vypravy")
     running = True
@@ -82,7 +87,8 @@ def main():
             screen.blit(font.render("Výpravy", True, (30, 30, 30)), (btn_vypravy.x + 30, btn_vypravy.y + 25))
         # Vykreslení výprav
         elif state == "vypravy":
-            screen.fill((40, 70, 40))  # Barva pozadí pro výpravy
+            # Vykresli pozadí na celou plochu okna (od 0,0 do width,height)
+            screen.blit(MAPA_TEMP_IMG, (0, 0))
 
             # Reset all boss tiles first
             for tile_types in tile_types_list:
@@ -117,10 +123,11 @@ def main():
                     start_point=path_points[0],
                     end_point=end_point,
                     mapa_boj_img=MAPA_BOJ_IMG,
+                    mapa_shop_img=MAPA_SHOP_IMG,
+                    mapa_event_img=MAPA_EVENT_IMG,
                     mapa_elite_img=MAPA_ELITE_IMG,
                     mapa_boss_img=MAPA_BOSS_IMG
                 )
-
         pygame.display.flip()  # Aktualizace obrazovky
         pygame.time.Clock().tick(60)  # Omezení FPS na 60
 
