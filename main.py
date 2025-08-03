@@ -15,18 +15,35 @@ def pil_to_pygame(image):
     return pygame.image.fromstring(data, size, mode).convert_alpha()
 
 def main():
-    width = 1980
-    height = 1080
-    title = "Divitaris Game"
+    width = 1980  # šířka okna
+    height = 1080  # výška okna
+    title = "Divitaris Game"  # titulek okna
 
-    pygame.init()  # Inicializace pygame
-    screen = pygame.display.set_mode((width, height))  # Vytvoření okna
-    pygame.display.set_caption(title)  # Nastavení titulku okna
-    font = pygame.font.SysFont(None, 80)  # Font pro texty
+    pygame.init()  # inicializace pygame
+    screen = pygame.display.set_mode((width, height))  # vytvoření okna
+    pygame.display.set_caption(title)  # nastavení titulku okna
+    font = pygame.font.SysFont(None, 80)  # font pro texty
 
-    # Nastavení tlačítek v menu
-    btn_story = pygame.Rect(width//2 - 300, height//2 - 100, 250, 100)
-    btn_vypravy = pygame.Rect(width//2 + 50, height//2 - 100, 250, 100)
+    # Rozměry tlačítek v rohu
+    button_width = 250  # šířka tlačítek v rohu
+    button_height = 100  # výška tlačítek v rohu
+    button_margin = 30  # mezera mezi tlačítky a okrajem
+
+    # Pravý dolní roh - tlačítko Výpravy
+    btn_vypravy = pygame.Rect(
+        width - button_width - button_margin,
+        height - button_height - button_margin,
+        button_width, button_height
+    )
+
+    # PLAY tlačítko doprostřed
+    play_width = 400  # šířka play tlačítka
+    play_height = 140  # výška play tlačítka
+    btn_play = pygame.Rect(
+        (width - play_width) // 2,
+        (height - play_height) // 2,
+        play_width, play_height
+    )
 
     # Generování cest pro výpravy
     num_paths = random.randint(3, 5)  # Počet cest (náhodně 3-5)
@@ -50,45 +67,50 @@ def main():
     tile_types_list = [generate_tile_types(len(path)) for path in paths]  # Typy kostiček pro každou cestu
 
     # Načtení textur pro mapu
-    MAPA_TEMP_PATH = os.path.join("Textury", "Mapa", "mapa_temp.png")
-    MAPA_TEMP_IMG = pygame.image.load(MAPA_TEMP_PATH).convert()
-    # Roztáhni pozadí na celou velikost okna
-    MAPA_TEMP_IMG = pygame.transform.scale(MAPA_TEMP_IMG, (width, height))
+    MAPA_TEMP_PATH = os.path.join("Textury", "Mapa", "mapa_temp.png")  # cesta k obrázku pozadí mapy
+    MAPA_TEMP_IMG = pygame.image.load(MAPA_TEMP_PATH).convert()  # načtení obrázku pozadí mapy
+    MAPA_TEMP_IMG = pygame.transform.scale(MAPA_TEMP_IMG, (width, height))  # roztáhnutí pozadí na celou obrazovku
 
     # Načtení textur pro jednotlivé typy kostiček
-    MAPA_BOJ_IMG = pygame.image.load(os.path.join("Textury", "Mapa", "mapa_boj.png")).convert_alpha()
-    MAPA_SHOP_IMG = pygame.image.load(os.path.join("Textury", "Mapa", "mapa_shop.png")).convert_alpha()
-    MAPA_EVENT_IMG = pygame.image.load(os.path.join("Textury", "Mapa", "mapa_event.png")).convert_alpha()
-    MAPA_ELITE_IMG = pygame.image.load(os.path.join("Textury", "Mapa", "mapa_elite.png")).convert_alpha()
-    MAPA_BOSS_IMG = pygame.image.load(os.path.join("Textury", "Mapa", "mapa_boss.png")).convert_alpha()
+    MAPA_BOJ_IMG = pygame.image.load(os.path.join("Textury", "Mapa", "mapa_boj.png")).convert_alpha()  # textura boj
+    MAPA_SHOP_IMG = pygame.image.load(os.path.join("Textury", "Mapa", "mapa_shop.png")).convert_alpha()  # textura obchod
+    MAPA_EVENT_IMG = pygame.image.load(os.path.join("Textury", "Mapa", "mapa_event.png")).convert_alpha()  # textura event
+    MAPA_ELITE_IMG = pygame.image.load(os.path.join("Textury", "Mapa", "mapa_elite.png")).convert_alpha()  # textura elite
+    MAPA_BOSS_IMG = pygame.image.load(os.path.join("Textury", "Mapa", "mapa_boss.png")).convert_alpha()  # textura boss
 
-    state = "menu"  # Stav hry ("menu" nebo "vypravy")
-    running = True
+    state = "menu"  # výchozí stav hry
+    running = True  # hlavní smyčka
 
     while running:
-        # Zpracování událostí (klávesnice, myš, zavření okna)
         for event in pygame.event.get():
-            if event.type == pygame.QUIT:
+            if event.type == pygame.QUIT:  # zavření okna
                 running = False
-            elif event.type == pygame.MOUSEBUTTONDOWN and state == "menu":
+            elif event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:  # stisknutí ESC
+                running = False
+            elif event.type == pygame.MOUSEBUTTONDOWN and state == "menu":  # kliknutí v menu
                 mx, my = event.pos
-                if btn_story.collidepoint(mx, my):
-                    state = "story"  # Přepnutí na příběh (zatím neimplementováno)
-                elif btn_vypravy.collidepoint(mx, my):
+                if btn_vypravy.collidepoint(mx, my):  # klik na Výpravy
                     state = "vypravy"
                     print("Přepnuto na výpravy")
+                elif btn_play.collidepoint(mx, my):  # klik na PLAY
+                    state = "play"  # nový stav pro play
+                    print("Play pressed")
 
-        # Vykreslení menu
         if state == "menu":
-            screen.fill((60, 60, 80))  # Barva pozadí menu
-            pygame.draw.rect(screen, (180, 180, 200), btn_story)
-            pygame.draw.rect(screen, (200, 200, 80), btn_vypravy)
-            screen.blit(font.render("Příběh", True, (30, 30, 30)), (btn_story.x + 30, btn_story.y + 25))
-            screen.blit(font.render("Výpravy", True, (30, 30, 30)), (btn_vypravy.x + 30, btn_vypravy.y + 25))
-        # Vykreslení výprav
+            screen.fill((60, 60, 80))  # pozadí menu
+            # Tlačítko Výpravy v rohu
+            pygame.draw.rect(screen, (200, 200, 80), btn_vypravy, border_radius=20)  # vykresli Výpravy
+            screen.blit(font.render("Výpravy", True, (30, 30, 30)), (btn_vypravy.x + 30, btn_vypravy.y + 25))  # text Výpravy
+            # PLAY tlačítko doprostřed
+            pygame.draw.rect(screen, (80, 200, 120), btn_play, border_radius=30)  # vykresli PLAY
+            play_text = font.render("PLAY", True, (30, 30, 30))  # text PLAY
+            screen.blit(
+                play_text,
+                (btn_play.x + (play_width - play_text.get_width()) // 2,
+                 btn_play.y + (play_height - play_text.get_height()) // 2)
+            )
         elif state == "vypravy":
-            # Vykresli pozadí na celou plochu okna (od 0,0 do width,height)
-            screen.blit(MAPA_TEMP_IMG, (0, 0))
+            screen.blit(MAPA_TEMP_IMG, (0, 0))  # vykresli pozadí mapy
 
             # Reset all boss tiles first
             for tile_types in tile_types_list:
@@ -96,27 +118,26 @@ def main():
                     if tile_types[i] == 4:
                         tile_types[i] = 0
 
-            # Find the longest path
+            # Najdi nejdelší cestu
             max_length = 0
             boss_path_idx = -1
             
-            # Check each path's length
+            # Zjisti index nejdelší cesty
             for idx, path in enumerate(paths):
-                path_length = len(path)  # Délka aktuální cesty
+                path_length = len(path)
                 if path_length > max_length:
                     max_length = path_length
                     boss_path_idx = idx
 
-            # Set boss on the last tile
+            # Nastav boss na poslední kostičku nejdelší cesty
             if boss_path_idx >= 0:
-                path = paths[boss_path_idx]  # Vezmi nejdelší cestu
-                last_tile_idx = len(path) - 1  # Index poslední kostičky (o 1 menší než délka)
-                tile_types_list[boss_path_idx][last_tile_idx] = 4  # Nastav boss
+                path = paths[boss_path_idx]
+                last_tile_idx = len(path) - 1
+                tile_types_list[boss_path_idx][last_tile_idx] = 4
                 print(f"Boss set on path {boss_path_idx}, tile {last_tile_idx + 1} of {len(path)}")
 
             # Vykreslení všech cest
             for path_points, tile_types in zip(paths, tile_types_list):
-                # Pro každou cestu vykresli kostičky
                 draw_path(
                     screen, path_points, tile_types,
                     box_size=box_size,
@@ -128,10 +149,19 @@ def main():
                     mapa_elite_img=MAPA_ELITE_IMG,
                     mapa_boss_img=MAPA_BOSS_IMG
                 )
-        pygame.display.flip()  # Aktualizace obrazovky
-        pygame.time.Clock().tick(60)  # Omezení FPS na 60
+        elif state == "play":
+            screen.fill((20, 20, 40))  # pozadí pro play stav
+            play_mode_text = font.render("PLAY MODE", True, (255, 255, 255))
+            screen.blit(
+                play_mode_text,
+                ((width - play_mode_text.get_width()) // 2,
+                 (height - play_mode_text.get_height()) // 2)
+            )
 
-    pygame.quit()  # Ukončení pygame
+        pygame.display.flip()  # aktualizace obrazovky
+        pygame.time.Clock().tick(60)  # omezení FPS
+
+    pygame.quit()  # ukončení pygame
 
 if __name__ == "__main__":
     main()
